@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<project name="AutomaticDeployBar" default="AutomaticDeploy" basedir=".">
+	<property name="runtimepath" value=""/>
+	<property name="toolkitpath" value=""/>
+	<property name="workspacepath" value=""/>
+	<property name="barname" value=""/>
+	<property name="appname" value=""/>
+	<property name="propfile" value=""/>
+
+	<!--	Target to build the broker archive using mqsicreatebar	-->
+	<target name="mqsi.buildbar" description="create bar file">
+		<exec executable ="${toolkitpath}\mqsicreatebar.exe" resultproperty="Build.state" failonerror="false" spawn="false">
+			<arg value="-data"/>
+			<arg value="${workspacepath}"/>
+			<arg value="-b"/>
+			<arg value="${barname}"/>
+			<arg value="-a"/>
+			<arg value="${appname}"/>
+			<arg value="-deployAsSource"/>
+		</exec>
+		<echo message="Completed build Broker Archive file - Result: ${Build.state}"/>
+		<fail message="Erro ***********">
+			<condition>
+				<not>
+					<equals arg1="${Build.state}" arg2="0"/>
+				</not>
+			</condition>
+		</fail>
+	</target>
+
+	<!--	Target to Apply overrides in Broker Archive file using mqsiapplybaroverride
+	<target name="mqsi.modifybar" depends=mqsi.buildbar" description="modify a bar file.">
+	-->
+
+	<target name="mqsi.modifybar" description="modify bar file." depends="mqsi.buildbar">
+		<echo message="Modify Broker Archive file: ${barname} "/>
+		<exec executable="$toolkitpath\mqsiapplybaroverride.exe" resultproperty="Modify.state" failonerror="false" spawn="false">
+			<arg value="-b"/>
+			<arg value="${barpath}\${bar.name}"/>
+			<arg value="-m"/>
+			<arg value="${propfile}"/>
+		</exec>
+		<echo message="Completed modify Broker Archive file - Result: ${Modify.state}"/>
+	</target>
+
+	<!-- Target to deploy the broker archive using mqsideploy
+	<target name="mqsi.deploybar" depends="mqsi.modifybar" description="deploys a bar file">
+	-->
+
+	<target name="mqsi.deploybar" description="Deploy a bar file." depends="mqsi.modifybar">
+		<echo message="Deploy Broker Archive file: ${barname}"/>
+		<exec executable="${runtimepath}\mqsideploy.exe" resultproperty="Deploy.state" failonerror="false" spawn="false">
+			<arg value ="${brokername}"/>
+			<arg value ="-e"/>
+			<arg value ="${egname}"/>
+			<arg value ="-a"/>
+			<arg value ="{barname}"/>
+			<arg value ="-w"/>
+			<arg value ="2145336164"/>
+		</exec>
+		<echo message="Completed deploy Broker Archive file - Result: ${Deploy.state} "/>
+	</target>
+
+	<target name="AutomaticDeploy" description="Call to execute the commands">
+		<echo message="____________________________________________________________________"/>
+		<echo message="|          STARTING AUTOMATIC BUILD BROKER ARCHIVE FILE            |"/>
+		<echo message="____________________________________________________________________"/>
+		<!--<antcall target="mqsi.buildbar"/>
+		<antcall target="mqsi.modifybar"/>-->
+		<antcall target="mqsi.deploybar"/>
+	</target>
+</project>
+
+
+
